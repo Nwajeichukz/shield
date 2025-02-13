@@ -26,8 +26,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final JwtService jwtService;
 
-    private final AuthenticationManager authenticationManager;
-
     private final MyUserDetailsService myUserDetailsService;
 
     public AppResponse<String> createAccount(RegistrationDto registrationDto) {
