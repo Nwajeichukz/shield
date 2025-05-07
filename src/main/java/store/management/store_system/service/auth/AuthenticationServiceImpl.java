@@ -2,6 +2,7 @@ package store.management.store_system.service.auth;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import store.management.store_system.dto.AppResponse;
@@ -14,6 +15,10 @@ import store.management.store_system.repository.RoleRepository;
 import store.management.store_system.repository.UserRepository;
 import store.management.store_system.service.JwtService;
 import store.management.store_system.service.MyUserDetailsService;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +36,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public AppResponse<String> createAccount(RegistrationDto registrationDto) {
         System.out.println(registrationDto.getDepartment() + "THIS SI THE DEPARTMENT");
 
-        System.out.println(registrationDto.getFirstName() + "this is the email");
+        System.out.println(registrationDto.getEmail() + "this is the email");
         boolean check = userRepository.existsByEmail(registrationDto.getEmail());
 
         if(check) return new AppResponse<>(0, "user already exist");
@@ -49,10 +54,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         Role role = findRoleByDepartment(registrationDto.getDepartment());
 
-        if (role == null) {
-            return new AppResponse<>(-1, "Invalid department specified");
-        }
-
         user.setRoles(role);
 
         User savedUser = userRepository.save(user);
@@ -68,20 +69,26 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if(!passwordEncoder.matches(authenticationDto.getPassword(), user.getPassword()))
             return new AppResponse<>(-1, "wrong email or password");
 
-        String token = jwtService.generateToken(user);
+        List<String> roles = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        String token = jwtService.generateToken(user, roles);
 
         return new AppResponse<>(0, "successful signin", token);
     }
 
     private Role findRoleByDepartment(String department) {
-        switch (department.toUpperCase()) {
-            case "MANAGER":
-                return roleRepository.findByName("MANAGER").orElse(null);
-            case "SALES":
-                return roleRepository.findByName("SALES").orElse(null);
-            default:
-                return null;
+        Optional<Role> role = roleRepository.findByName(department);
+
+        if (role.isEmpty()) {
+            Role newRole = new Role();
+            newRole.setName(department);
+
+            return newRole;
         }
+
+        return role.get();
     }
 
 

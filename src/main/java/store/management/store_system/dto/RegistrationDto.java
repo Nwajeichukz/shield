@@ -17,7 +17,7 @@ public class RegistrationDto {
     private String email;
 
     @javax.validation.constraints.Pattern(
-            regexp = "manager|sales",
+            regexp = "MANAGER|SALES",
             message = "Department type should be either manager, sales,"
     )    private String department;
 

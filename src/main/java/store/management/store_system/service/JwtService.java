@@ -1,25 +1,21 @@
 package store.management.store_system.service;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.beans.factory.annotation.Value;
+import java.util.*;
 import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
 public class JwtService {
 
-//    @Value("${jwt.secret.key}")
-    private final String SECRET_KEY = "secret";
+    @Value("${jwt.secret-key}")
+    String SECRET_KEY;
 
     public String extractUsername(String token){return  extractClaim(token, Claims::getSubject);}
 
@@ -34,13 +30,22 @@ public class JwtService {
         return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
     }
 
+    public List<String> extractRoles(String token) {
+        Claims claims = extractAllClaims(token);
+        Object roles = claims.get("roles");
+        if (roles instanceof List) {
+            return (List<String>) roles;
+        }
+        return Collections.emptyList();
+    }
 
     private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    public String generateToken(UserDetails userDetails){
+    public String generateToken(UserDetails userDetails, List<String> role){
         Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", role);
         return createToken(claims, userDetails.getUsername());
     }
 
@@ -55,5 +60,4 @@ public class JwtService {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
-
 }

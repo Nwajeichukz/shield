@@ -29,4 +29,6 @@ public class AccountController {
     public ResponseEntity<AppResponse<String>> updateProfile(@PathVariable long id, @RequestBody UpdateProfile updateProfile){
         return ResponseEntity.ok(userAccountService.updateProfile(updateProfile, id));
     }
+
+    
 }

@@ -28,7 +28,7 @@ public class User {
 
     private String department;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     private Role roles;
 
     private final String timeOfCreation = String.valueOf(LocalDateTime.now());
